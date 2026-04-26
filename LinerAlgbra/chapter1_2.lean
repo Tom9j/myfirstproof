@@ -245,13 +245,84 @@ lemma NegNegIsId {A : Type} [Field_ A] (a : A) : (neg (neg a)) = a := by
   rw [(Field_.add_neut a).right] at h1
 
   exact h1.symm
- lemma NegMulNotNegIsNeg {A : Type} [Field_ A] (a : A) (b : A) : Field_.mul (neg a) b = neg (Field_.mul a b) := by
-  have h : Field_.add (Field_.mul a b) (Field_.mul (neg a) b) = Field_.mul b (Field_.add a (neg a)) := by
-    rw[←FieldDistributiveLaw.right]
-    rw[Field_.mul_comm (Field_.add a -a) b]
-  have h1 : Field_.add (Field_.mul a b) (neg (Field_.mul a b)) = Field_.zero :=by
-    apply (AddInverseCancel (Field_.mul a b)).left
-  have h2 : Field_.mul b (Field_.add a -a) = Field_.zero := by
-    rw [(AddInverseCancel a).left]
-    apply (MulByZeroIsZero b).left
-  have 
+
+
+theorem NegMulNotNegIsNeg {A : Type} [Field_ A] (a : A) (b : A) :
+  Field_.mul (neg a) b = neg (Field_.mul a b) ∧ Field_.mul a (neg b) = neg (Field_.mul a b) := by
+
+  apply And.intro
+
+  ·
+    have h : Field_.add (Field_.mul a b) (Field_.mul (neg a) b) = Field_.mul b (Field_.add a (neg a)) := by
+      rw[←FieldDistributiveLaw.right]
+      rw[Field_.mul_comm (Field_.add a (neg a)) b]
+    have h1 : Field_.add (Field_.mul a b) (neg (Field_.mul a b)) = Field_.zero :=by
+      apply (AddInverseCancel (Field_.mul a b)).left
+    have h2 : Field_.mul b (Field_.add a (neg a)) = Field_.zero := by
+      rw [(AddInverseCancel a).left]
+      apply (MulByZeroIsZero b).left
+    have h3 : Field_.add (Field_.mul a b) (neg (Field_.mul a b)) = Field_.add (Field_.mul a b) (Field_.mul (neg a) b) := by
+      rw[h]
+      rw[h1]
+      rw[h2]
+    have h4 : Field_.add (Field_.add (Field_.mul a b) (neg (Field_.mul a b))) (neg (Field_.mul a b)) = Field_.add (Field_.add (Field_.mul a b) (Field_.mul (neg a) b)) (neg (Field_.mul a b))  := by
+      rw[h3]
+    have h5 : Field_.add (Field_.add (Field_.mul a b) (neg (Field_.mul a b))) (neg (Field_.mul a b)) = neg (Field_.mul a b) := by
+      rw[(AddInverseCancel (Field_.mul a b)).left]
+      rw [(Field_.add_neut (neg (Field_.mul a b))).left]
+    have h6 : Field_.add (Field_.add (Field_.mul a b) (Field_.mul (neg a) b)) (neg (Field_.mul a b)) = Field_.mul (neg a) b := by
+      rw[Field_.add_assoc]
+      rw[(Field_.add_comm (Field_.mul (neg a) b) (neg (Field_.mul a b)))]
+      rw[← Field_.add_assoc]
+      rw[(AddInverseCancel (Field_.mul a b)).left]
+      rw [(Field_.add_neut  (Field_.mul (neg a) b)).left]
+    rw[←h6]
+    conv =>
+      rhs
+      rw[←h5]
+    exact h4.symm
+
+  ·
+    have h : Field_.add (Field_.mul a b) (Field_.mul a (neg b)) = Field_.mul a (Field_.add b (neg b)) := by
+      rw [←FieldDistributiveLaw.left]
+    have h1 : Field_.add (Field_.mul a b) (neg (Field_.mul a b)) = Field_.zero := by
+      apply (AddInverseCancel (Field_.mul a b)).left
+    have h2 : Field_.mul a (Field_.add b (neg b)) = Field_.zero := by
+      rw [(AddInverseCancel b).left]
+      apply (MulByZeroIsZero a).left
+    have h3 : Field_.add (Field_.mul a b) (neg (Field_.mul a b)) = Field_.add (Field_.mul a b) (Field_.mul a (neg b)) := by
+      rw [h]
+      rw [h1]
+      rw [h2]
+    have h4 : Field_.add (Field_.add (Field_.mul a b) (neg (Field_.mul a b))) (neg (Field_.mul a b)) = Field_.add (Field_.add (Field_.mul a b) (Field_.mul a (neg b))) (neg (Field_.mul a b)) := by
+      rw [h3]
+    have h5 : Field_.add (Field_.add (Field_.mul a b) (neg (Field_.mul a b))) (neg (Field_.mul a b)) = neg (Field_.mul a b) := by
+      rw [(AddInverseCancel (Field_.mul a b)).left]
+      rw [(Field_.add_neut (neg (Field_.mul a b))).left]
+    have h6 : Field_.add (Field_.add (Field_.mul a b) (Field_.mul a (neg b))) (neg (Field_.mul a b)) = Field_.mul a (neg b) := by
+      rw [Field_.add_assoc]
+      rw [(Field_.add_comm (Field_.mul a (neg b)) (neg (Field_.mul a b)))]
+      rw [← Field_.add_assoc]
+      rw [(AddInverseCancel (Field_.mul a b)).left]
+      rw [(Field_.add_neut (Field_.mul a (neg b))).left]
+    rw [←h6]
+    conv =>
+      rhs
+      rw [←h5]
+    exact h4.symm
+
+lemma OneNegTimesEqNeg {A : Type} [Field_ A] (a : A) :
+  Field_.mul (neg Field_.one) a = neg a ∧ Field_.mul a (neg Field_.one) = neg a := by
+  apply And.intro
+  ·
+    rw [(NegMulNotNegIsNeg Field_.one a).left]
+    rw [(Field_.mul_neut a).left]
+  .
+    rw [(NegMulNotNegIsNeg a Field_.one).right]
+    rw [(Field_.mul_neut a).right]
+
+theorem NegTimesNegEqNotNeg {A : Type} [Field_ A] (a : A) (b : A) :
+  Field_.mul (neg a) (neg b) = Field_.mul a b := by
+  rw [(NegMulNotNegIsNeg a (neg b)).left]
+  rw [(NegMulNotNegIsNeg a b).right]
+  rw [NegNegIsId (Field_.mul a b)]
