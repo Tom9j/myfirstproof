@@ -163,9 +163,8 @@ theorem mul_inv_cancel_ {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) :
   Field_.mul a (inv a ha) = Field_.one ∧  Field_.mul (inv a ha) a = Field_.one := by
   exact (Classical.choose_spec (Field_.mul_inv a ha))
 
-def f_mul : Operation Rat := fun a b => |a * b|
 
-theorem EveryThingsTimesZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a) (Field_.zero) = Field_.zero := by
+theorem EveryThingsTimesZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a) (Field_.zero) = Field_.zero ∧  Field_.mul (Field_.zero) (a) = Field_.zero := by
   have h : Field_.add (Field_.zero : A) Field_.zero = Field_.zero := by
     exact (Field_.add_neut (Field_.zero : A)).left
   have h1 : Field_.mul a (Field_.add (Field_.zero : A) Field_.zero) = Field_.add (Field_.mul a Field_.zero) (Field_.mul a Field_.zero) :=by
@@ -184,7 +183,11 @@ theorem EveryThingsTimesZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a
       (Field_.add_neut (Field_.mul a Field_.zero)).right
     rw [h_neut] at h4_1
     exact h4_1
+  apply And.intro
   exact h4
+  rw [Field_.mul_comm]
+  exact h4
+
 
 
 
@@ -198,7 +201,7 @@ theorem IfMulEQZeroSoaorbEQz {A : Type} [Field_ A] (a : A) (b : A) : Field_.mul 
       exact (Field_.mul_neut b).left
     rw[←h2_1]
     rw[h]
-    apply EveryThingsTimesZeroIsZero (inv a h4)
+    apply (EveryThingsTimesZeroIsZero (inv a h4)).left
   by_cases ha : a = Field_.zero
   ·
     exact Or.inl ha
@@ -219,17 +222,13 @@ theorem IfMulEQZeroSoaorbEQzAndIforbEq {A : Type} [Field_ A] (a : A) (b : A) :
     | inl ha =>
       rw [ha]
       rw [Field_.mul_comm Field_.zero b]
-      exact EveryThingsTimesZeroIsZero b
+      exact (EveryThingsTimesZeroIsZero b).left
     | inr hb =>
       rw [hb]
-      exact EveryThingsTimesZeroIsZero a
+      exact (EveryThingsTimesZeroIsZero a).left
 
 theorem ZeroHasNoInverse {A : Type} [Field_ A] :
-  ¬ ∃ b : A, Field_.mul Field_.zero b = Field_.one := by
-  intro h
-  obtain ⟨b, hb⟩ := h
-  have hz : Field_.mul b Field_.zero = Field_.zero := EveryThingsTimesZeroIsZero b
-  rw [Field_.mul_comm b Field_.zero] at hz
-
-  rw [hz] at hb
-  exact Field_.zero_neq_one hb
+  ∀ a : A, Field_.mul Field_.zero a ≠  Field_.one := by
+  intro a
+  rw [(EveryThingsTimesZeroIsZero a).right]
+  exact Field_.zero_neq_one
