@@ -37,7 +37,7 @@ def AllElementsHaveInverse (A : Type) (op : Operation A) (e:A) (he: IsNeutralEle
 -- משפט: לטבעיים החיוביים (ℕ+) אין איבר נטרלי תחת פעולת החיבור.
 -- הרעיון: אם היה איבר נטרלי e, אז e + e = e.
 -- אבל בטבעיים החיוביים, e ≥ 1, ולכן e + e ≥ 2 > e — סתירה!
-theorem pnat_add_no_identity : ¬ HasNeutralMember ℕ+ (· + ·) := by
+theorem PNatNoAdditiveIdentity : ¬ HasNeutralMember ℕ+ (· + ·) := by
   intro h1
   obtain ⟨e, he⟩ := h1
   -- נקבל מהנחה: e + e = e (על ידי בחירת a = e בתנאי השמאלי)
@@ -50,7 +50,7 @@ theorem pnat_add_no_identity : ¬ HasNeutralMember ℕ+ (· + ·) := by
   omega
 
 -- משפט: לכל היותר איבר ניטרלי אחד
-theorem ATypeHasAtMostOneNeutralElement (A : Type) (op : Operation A) :
+theorem NeutralElementIsUnique (A : Type) (op : Operation A) :
   -- לכל שני איברים שתביא לי:
   ∀ e1 e2 : A,
   -- אם e1 ניטרלי:
@@ -68,7 +68,7 @@ theorem ATypeHasAtMostOneNeutralElement (A : Type) (op : Operation A) :
 
 
 
-theorem IfTypeHasNeutralElementThenItIsUnique (A : Type) (op : Operation A) (h: HasNeutralMember A op) : ∃! e1 : A, ∀a : A, op e1 a = a ∧ op a e1 = a := by
+theorem ExistsUniqueNeutralElement (A : Type) (op : Operation A) (h: HasNeutralMember A op) : ∃! e1 : A, ∀a : A, op e1 a = a ∧ op a e1 = a := by
     obtain ⟨e, he⟩ := h
     use e
     apply And.intro
@@ -80,7 +80,7 @@ theorem IfTypeHasNeutralElementThenItIsUnique (A : Type) (op : Operation A) (h: 
     -- אז y = e
     -- ולא e = y
     -- ואז שמפעילים את המשפט הוא מחזיר משפט y = e כי במשפט הy זה הe1
-    apply ATypeHasAtMostOneNeutralElement A op e2 e he2 he
+    apply NeutralElementIsUnique A op e2 e he2 he
 
 
 

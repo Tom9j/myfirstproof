@@ -71,7 +71,7 @@ instance : Field_ ℝ where
   distribLeft := real_mul_add_Distributive.left
   zero_neq_one := real_zero_neq_one
 
-theorem Field_IsDistributive {A : Type} [Field_ A] : IsDistributive A Field_.mul Field_.add := by
+theorem FieldDistributiveLaw {A : Type} [Field_ A] : IsDistributive A Field_.mul Field_.add := by
   unfold IsDistributive
   unfold IsDistributiveFromLeft
   unfold IsDistributiveFromRight
@@ -94,8 +94,7 @@ theorem Field_IsDistributive {A : Type} [Field_ A] : IsDistributive A Field_.mul
 
 
 
- theorem ForEveryElementInFieldExistOnlyOneInvertNumberForAdd
- {A : Type} [Field_ A] (a : A) :
+theorem AdditiveInverseIsUnique {A : Type} [Field_ A] (a : A) :
   ∃! b : A, Field_.add a b = Field_.zero := by
 
     obtain ⟨b,hb⟩   := Field_.add_inv a
@@ -122,7 +121,7 @@ theorem Field_IsDistributive {A : Type} [Field_ A] : IsDistributive A Field_.mul
     exact h3
 
 --אותה הוכחה בדיוק פשוט החלפנו 0 ב1
-theorem ForEveryNonZeroElementInFieldExistOnlyOneInvertNumberForMul {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) :
+theorem MultiplicativeInverseIsUnique {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) :
   ∃! b : A, Field_.mul a b = Field_.one := by
       obtain ⟨b,hb⟩   := Field_.mul_inv a ha
       apply ExistsUnique.intro b
@@ -151,7 +150,7 @@ noncomputable def neg {A : Type} [Field_ A] (a : A) : A :=
   Classical.choose (Field_.add_inv a)
 prefix:max "-" => neg
 
-theorem neg_inv_cancel_ {A : Type} [Field_ A] (a : A) :
+theorem AddInverseCancel {A : Type} [Field_ A] (a : A) :
   Field_.add a (neg a) = Field_.zero ∧ Field_.add (neg a) a = Field_.zero:= by
    exact (Classical.choose_spec (Field_.add_inv a))
 
@@ -159,16 +158,16 @@ theorem neg_inv_cancel_ {A : Type} [Field_ A] (a : A) :
 noncomputable def inv {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) : A :=
   Classical.choose (Field_.mul_inv a ha)
 
-theorem mul_inv_cancel_ {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) :
+theorem MulInverseCancel {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) :
   Field_.mul a (inv a ha) = Field_.one ∧  Field_.mul (inv a ha) a = Field_.one := by
   exact (Classical.choose_spec (Field_.mul_inv a ha))
 
 
-theorem EveryThingsTimesZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a) (Field_.zero) = Field_.zero ∧  Field_.mul (Field_.zero) (a) = Field_.zero := by
+theorem MulByZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a) (Field_.zero) = Field_.zero ∧  Field_.mul (Field_.zero) (a) = Field_.zero := by
   have h : Field_.add (Field_.zero : A) Field_.zero = Field_.zero := by
     exact (Field_.add_neut (Field_.zero : A)).left
   have h1 : Field_.mul a (Field_.add (Field_.zero : A) Field_.zero) = Field_.add (Field_.mul a Field_.zero) (Field_.mul a Field_.zero) :=by
-    apply Field_IsDistributive.left
+    apply FieldDistributiveLaw.left
   have h2 : Field_.mul a (Field_.add (Field_.zero : A) Field_.zero) = Field_.mul a Field_.zero := by
     rw[h]
   have h3 : Field_.add (Field_.mul a Field_.zero) (Field_.mul a Field_.zero) = Field_.mul a Field_.zero := by
@@ -178,7 +177,7 @@ theorem EveryThingsTimesZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a
     have h4_1 : Field_.add (Field_.add (Field_.mul a Field_.zero) (Field_.mul a Field_.zero)) (neg (Field_.mul a Field_.zero)) = Field_.add (Field_.mul a Field_.zero) (neg (Field_.mul a Field_.zero)) := by
       rw [h3]
     rw [Field_.add_assoc] at h4_1
-    rw [(neg_inv_cancel_ (Field_.mul a Field_.zero)).left] at h4_1
+    rw [(AddInverseCancel (Field_.mul a Field_.zero)).left] at h4_1
     have h_neut : Field_.add (Field_.mul a Field_.zero) Field_.zero = Field_.mul a Field_.zero :=
       (Field_.add_neut (Field_.mul a Field_.zero)).right
     rw [h_neut] at h4_1
@@ -191,17 +190,17 @@ theorem EveryThingsTimesZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a
 
 
 
-theorem IfMulEQZeroSoaorbEQz {A : Type} [Field_ A] (a : A) (b : A) : Field_.mul a b = Field_.zero → a = Field_.zero ∨ b = Field_.zero := by
+theorem ZeroProductTheorem {A : Type} [Field_ A] (a : A) (b : A) : Field_.mul a b = Field_.zero → a = Field_.zero ∨ b = Field_.zero := by
   intro h
   have h2 : a ≠ Field_.zero → b = Field_.zero := by
     intro h4
     have h2_1 : Field_.mul (inv a h4) (Field_.mul a b) = b := by
       rw [←Field_.mul_assoc]
-      rw[(mul_inv_cancel_ a h4).right]
+      rw[(MulInverseCancel a h4).right]
       exact (Field_.mul_neut b).left
     rw[←h2_1]
     rw[h]
-    apply (EveryThingsTimesZeroIsZero (inv a h4)).left
+    apply (MulByZeroIsZero (inv a h4)).left
   by_cases ha : a = Field_.zero
   ·
     exact Or.inl ha
@@ -209,12 +208,12 @@ theorem IfMulEQZeroSoaorbEQz {A : Type} [Field_ A] (a : A) (b : A) : Field_.mul 
   ·
     have hb : b = Field_.zero := h2 ha
     exact Or.inr hb
-theorem IfMulEQZeroSoaorbEQzAndIforbEq {A : Type} [Field_ A] (a : A) (b : A) :
+theorem ZeroProductIff {A : Type} [Field_ A] (a : A) (b : A) :
   Field_.mul a b = Field_.zero ↔ a = Field_.zero ∨ b = Field_.zero := by
 
   constructor
   ·
-    exact IfMulEQZeroSoaorbEQz a b
+    exact ZeroProductTheorem a b
 
   ·
     intro h
@@ -222,13 +221,27 @@ theorem IfMulEQZeroSoaorbEQzAndIforbEq {A : Type} [Field_ A] (a : A) (b : A) :
     | inl ha =>
       rw [ha]
       rw [Field_.mul_comm Field_.zero b]
-      exact (EveryThingsTimesZeroIsZero b).left
+      exact (MulByZeroIsZero b).left
     | inr hb =>
       rw [hb]
-      exact (EveryThingsTimesZeroIsZero a).left
+      exact (MulByZeroIsZero a).left
 
-theorem ZeroHasNoInverse {A : Type} [Field_ A] :
+theorem ZeroHasNoMulInverse {A : Type} [Field_ A] :
   ∀ a : A, Field_.mul Field_.zero a ≠  Field_.one := by
   intro a
-  rw [(EveryThingsTimesZeroIsZero a).right]
+  rw [(MulByZeroIsZero a).right]
   exact Field_.zero_neq_one
+
+lemma NegNegIsId {A : Type} [Field_ A] (a : A) : (neg (neg a)) = a := by
+  have h : Field_.add a (neg a) = Field_.zero := by
+    exact (AddInverseCancel a).left
+
+  have h1 : Field_.add a (Field_.add (neg a) (neg (neg a))) = (neg (neg a)) := by
+    rw [←(Field_.add_assoc a (neg a) (neg (neg a)))]
+    rw [h]
+    rw [(Field_.add_neut (neg (neg a))).left]
+
+  rw [(AddInverseCancel (neg a)).left] at h1
+  rw [(Field_.add_neut a).right] at h1
+
+  exact h1.symm
