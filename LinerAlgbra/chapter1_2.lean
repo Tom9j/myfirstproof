@@ -245,3 +245,13 @@ lemma NegNegIsId {A : Type} [Field_ A] (a : A) : (neg (neg a)) = a := by
   rw [(Field_.add_neut a).right] at h1
 
   exact h1.symm
+ lemma NegMulNotNegIsNeg {A : Type} [Field_ A] (a : A) (b : A) : Field_.mul (neg a) b = neg (Field_.mul a b) := by
+  have h : Field_.add (Field_.mul a b) (Field_.mul (neg a) b) = Field_.mul b (Field_.add a (neg a)) := by
+    rw[←FieldDistributiveLaw.right]
+    rw[Field_.mul_comm (Field_.add a -a) b]
+  have h1 : Field_.add (Field_.mul a b) (neg (Field_.mul a b)) = Field_.zero :=by
+    apply (AddInverseCancel (Field_.mul a b)).left
+  have h2 : Field_.mul b (Field_.add a -a) = Field_.zero := by
+    rw [(AddInverseCancel a).left]
+    apply (MulByZeroIsZero b).left
+  have 
