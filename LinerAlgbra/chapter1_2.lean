@@ -71,6 +71,12 @@ instance : Field_ ℝ where
   distribLeft := real_mul_add_Distributive.left
   zero_neq_one := real_zero_neq_one
 
+instance {A : Type} [Field_ A] : Zero A where zero := Field_.zero
+instance {A : Type} [Field_ A] : One A where one := Field_.one
+instance {A : Type} [Field_ A] : Add A where add := Field_.add
+instance {A : Type} [Field_ A] : Mul A where mul := Field_.mul
+
+
 theorem FieldDistributiveLaw {A : Type} [Field_ A] : IsDistributive A Field_.mul Field_.add := by
   unfold IsDistributive
   unfold IsDistributiveFromLeft
@@ -326,3 +332,124 @@ theorem NegTimesNegEqNotNeg {A : Type} [Field_ A] (a : A) (b : A) :
   rw [(NegMulNotNegIsNeg a (neg b)).left]
   rw [(NegMulNotNegIsNeg a b).right]
   rw [NegNegIsId (Field_.mul a b)]
+
+lemma add_ab_cd_eq_add_da_cb {A : Type} [Field_ A] (a : A) (b : A) (c : A) (d : A) : Field_.add (Field_.add a b) (Field_.add c d) = Field_.add (Field_.add d a) (Field_.add c b) := by
+  have h : Field_.add (Field_.add a b) c = Field_.add a (Field_.add b c) :=  by
+    rw[Field_.add_assoc]
+  have h1 : Field_.add a (Field_.add b c) = Field_.add a (Field_.add c b) := by
+    rw[(Field_.add_comm b c)]
+  have h2 : Field_.add (Field_.add (Field_.add a b) c) d =  Field_.add (Field_.add a (Field_.add c b)) d := by
+    rw[h]
+    rw[h1]
+  have h3 : Field_.add (Field_.add (Field_.add a b) c) d = Field_.add (Field_.add a b) (Field_.add c d) := by
+    rw[Field_.add_assoc]
+  have h4 : Field_.add (Field_.add a (Field_.add  c b)) d = Field_.add (Field_.add d a) (Field_.add c b) := by
+    rw[Field_.add_comm]
+    rw[← Field_.add_assoc]
+  rw[←h3]
+  rw[←h4]
+  exact h2
+
+
+noncomputable def sub {A : Type} [Field_ A] (a : A) (b : A) := Field_.add a (neg b)
+
+noncomputable def div {A : Type} [Field_ A] (a : A) (b : A) (hb : b ≠ Field_.zero ) : A :=
+  Field_.mul a (inv b hb)
+
+theorem AddSomethingToNegZeroAndGetSomething {A : Type} [Field_ A] (a : A) : sub a Field_.zero = a := by
+  unfold sub
+  have h : Field_.add (Field_.zero : A) (neg Field_.zero) = neg Field_.zero := by
+    rw[(Field_.add_neut (neg Field_.zero)).left]
+  have h1 : Field_.add (Field_.zero : A) (neg Field_.zero) = Field_.zero := by
+    rw[(AddInverseCancel Field_.zero).left]
+  have h2 : (Field_.zero : A) = neg Field_.zero := by
+    rw[←h]
+    conv =>
+    lhs
+    rw[←h1]
+  rw[←h2]
+  exact (Field_.add_neut a).right
+
+theorem SomethingDivByOneEqSomething {A : Type} [Field_ A] (a : A) : div a Field_.one Field_.zero_neq_one.symm = a := by
+  unfold div
+
+  have h : Field_.mul (Field_.one : A) (inv Field_.one Field_.zero_neq_one.symm) = inv Field_.one Field_.zero_neq_one.symm := by
+    rw [(Field_.mul_neut (inv Field_.one Field_.zero_neq_one.symm)).left]
+
+  have h1 : Field_.mul (Field_.one : A) (inv Field_.one Field_.zero_neq_one.symm) = Field_.one := by
+    rw [(MulInverseCancel Field_.one Field_.zero_neq_one.symm).left]
+
+  have h2 : (Field_.one : A) = inv Field_.one Field_.zero_neq_one.symm := by
+    rw [←h]
+    conv =>
+      lhs
+      rw [←h1]
+
+  rw [←h2]
+  exact (Field_.mul_neut a).right
+
+
+theorem MulByNeg {A : Type} [Field_ A] (a : A) (b : A) : neg (Field_.add a b) = sub (neg a)  b := by
+  unfold sub
+  rw [←(OneNegTimesEqNeg (Field_.add a b)).left]
+  rw[Field_.distribLeft]
+  rw[(OneNegTimesEqNeg a).left]
+  rw[(OneNegTimesEqNeg b).left]
+
+lemma MulTwoElementsThatNotEqZeroIsNotZero {A : Type} [Field_ A] (a : A) (b : A) (ha : a ≠ Field_.zero) (hb : b ≠ Field_.zero) : Field_.mul a b ≠ Field_.zero := by
+  by_contra h
+  rw[ZeroProductIff a b] at h
+  cases h with
+  | inl hp =>
+    contradiction
+  | inr hz =>
+    contradiction
+
+theorem AddDivEqCommonDenom {A : Type} [Field_ A] (a b c d : A)
+  (hb : b ≠ Field_.zero) (hd : d ≠ Field_.zero) :
+  Field_.add (div a b hb) (div c d hd) = div (Field_.add (Field_.mul a d) (Field_.mul b c) ) (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd) := by
+    unfold div
+    have h : Field_.mul (Field_.mul b d) (Field_.add (Field_.mul a (inv b hb)) (Field_.mul c (inv d hd))) = Field_.add (Field_.mul (Field_.mul b d) (Field_.mul a (inv b hb))) (Field_.mul (Field_.mul b d) (Field_.mul c (inv d hd))) := by
+      rw[Field_.distribLeft]
+    have h1 :   Field_.mul (Field_.mul b d) ((inv b hb)) = d := by
+      rw[Field_.mul_comm b d]
+      rw [Field_.mul_assoc]
+      rw [(MulInverseCancel b hb).left]
+      rw [(Field_.mul_neut d).right]
+    have h2 : Field_.mul (Field_.mul (Field_.mul b d) ((inv b hb))) a = Field_.mul (Field_.mul b d) (Field_.mul a (inv b hb)) := by
+      rw [Field_.mul_assoc (Field_.mul b d) ((inv b hb)) a]
+      rw [Field_.mul_comm ((inv b hb)) a]
+    have h3 : Field_.mul (Field_.mul (Field_.mul b d) ((inv b hb))) a  = Field_.mul a d := by
+      rw[h1]
+      rw[Field_.mul_comm]
+    have h1_1 : Field_.mul (Field_.mul b d) ((inv d hd)) = b := by
+      rw [Field_.mul_assoc]
+      rw [(MulInverseCancel d hd).left]
+      rw [(Field_.mul_neut b).right]
+    have h2_2 : Field_.mul (Field_.mul (Field_.mul b d) ((inv d hd))) c = Field_.mul (Field_.mul b d) (Field_.mul c (inv d hd)) := by
+      rw [Field_.mul_assoc (Field_.mul b d) ((inv d hd)) c]
+      rw [Field_.mul_comm ((inv d hd)) c]
+    have h3_3 : Field_.mul (Field_.mul (Field_.mul b d) ((inv d hd))) c = Field_.mul b c := by
+      rw[h1_1]
+    have h4 : Field_.add (Field_.mul (Field_.mul b d) (Field_.mul a (inv b hb))) (Field_.mul (Field_.mul b d) (Field_.mul c (inv d hd))) = Field_.add (Field_.mul a d) (Field_.mul b c) := by
+      rw[←h2]
+      rw[←h2_2]
+      rw[h3]
+      rw[h3_3]
+    have v : Field_.mul (Field_.mul (Field_.add (Field_.mul a d) (Field_.mul b c)) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd))) (Field_.mul b d) = Field_.add (Field_.mul a d) (Field_.mul b c) := by
+        rw[Field_.mul_assoc (Field_.add (Field_.mul a d) (Field_.mul b c)) ((inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd))) (Field_.mul b d)]
+        rw[(MulInverseCancel (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd)).right]
+        rw[(Field_.mul_neut (Field_.add (Field_.mul a d) (Field_.mul b c))).right]
+    have l1 : Field_.mul (Field_.mul (Field_.add (Field_.mul a d) (Field_.mul b c)) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd))) (Field_.mul b d) = Field_.add (Field_.mul (Field_.mul b d) (Field_.mul a (inv b hb))) (Field_.mul (Field_.mul b d) (Field_.mul c (inv d hd))) := by
+      rw[v]
+      rw[h4]
+    have l2 : Field_.mul (Field_.mul (Field_.mul (Field_.add (Field_.mul a d) (Field_.mul b c)) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd))) (Field_.mul b d)) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd)) = (Field_.mul (Field_.add (Field_.mul a d) (Field_.mul b c)) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd))) := by
+      rw[v]
+    have l3 : Field_.mul (Field_.add (Field_.mul (Field_.mul b d) (Field_.mul a (inv b hb))) (Field_.mul (Field_.mul b d) (Field_.mul c (inv d hd)))) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd)) = Field_.add (Field_.mul a (inv b hb)) (Field_.mul c (inv d hd)) := by
+      rw[←h]
+      rw [Field_.mul_comm (Field_.mul b d) (Field_.add (Field_.mul a (inv b hb)) (Field_.mul c (inv d hd)))]
+      rw[Field_.mul_assoc (Field_.add (Field_.mul a (inv b hb)) (Field_.mul c (inv d hd))) (Field_.mul b d) (inv (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd))]
+      rw[(MulInverseCancel (Field_.mul b d) (MulTwoElementsThatNotEqZeroIsNotZero b d hb hd)).left]
+      rw[(Field_.mul_neut (Field_.add (Field_.mul a (inv b hb)) (Field_.mul c (inv d hd)))).right]
+    rw[← l3]
+    rw[h4]
