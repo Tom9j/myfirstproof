@@ -453,3 +453,53 @@ theorem AddDivEqCommonDenom {A : Type} [Field_ A] (a b c d : A)
       rw[(Field_.mul_neut (Field_.add (Field_.mul a (inv b hb)) (Field_.mul c (inv d hd)))).right]
     rw[← l3]
     rw[h4]
+
+
+theorem SubEqSub_implies_AddEqAdd {A : Type} [Field_ A] (a b c d : A) (h : sub a b = sub c d) : Field_.add a d = Field_.add c b := by
+  unfold sub at h
+  have h1 : Field_.add (Field_.add a (neg b)) (Field_.add b d) = Field_.add (Field_.add c (neg d)) (Field_.add b d) := by rw [h]
+  have h2 : Field_.add (Field_.add a (neg b)) (Field_.add b d) = Field_.add a d := by
+    rw [Field_.add_assoc]
+    have h_inner : Field_.add (neg b) (Field_.add b d) = d := by
+      rw [←Field_.add_assoc]
+      rw [Field_.add_comm (neg b) b] -- הפיכת הסדר כדי שהצמצום יעבוד
+      rw [(AddInverseCancel b).left]
+      rw [(Field_.add_neut d).left]
+    rw [h_inner]
+  have h3 : Field_.add (Field_.add c (neg d)) (Field_.add b d) = Field_.add c b := by
+    rw [Field_.add_comm b d]
+    rw [Field_.add_assoc]
+    have h_inner2 : Field_.add (neg d) (Field_.add d b) = b := by
+      rw [←Field_.add_assoc]
+      rw [Field_.add_comm (neg d) d] -- הפיכת הסדר
+      rw [(AddInverseCancel d).left]
+      rw [(Field_.add_neut b).left]
+    rw [h_inner2]
+  rw [←h2]
+  rw [←h3]
+  exact h1
+
+
+theorem DivEqDiv_implies_CrossMul {A : Type} [Field_ A] (a b c d : A) (hb : b ≠ Field_.zero) (hd : d ≠ Field_.zero) (h : div a b hb = div c d hd) : Field_.mul a d = Field_.mul c b := by
+  unfold div at h
+  have h1 : Field_.mul (Field_.mul a (inv b hb)) (Field_.mul b d) = Field_.mul (Field_.mul c (inv d hd)) (Field_.mul b d) := by rw [h]
+  have h2 : Field_.mul (Field_.mul a (inv b hb)) (Field_.mul b d) = Field_.mul a d := by
+    rw [Field_.mul_assoc]
+    have h_inner : Field_.mul (inv b hb) (Field_.mul b d) = d := by
+      rw [←Field_.mul_assoc]
+      rw [Field_.mul_comm (inv b hb) b] -- הפיכת הסדר
+      rw [(MulInverseCancel b hb).left]
+      rw [(Field_.mul_neut d).left]
+    rw [h_inner]
+  have h3 : Field_.mul (Field_.mul c (inv d hd)) (Field_.mul b d) = Field_.mul c b := by
+    rw [Field_.mul_comm b d]
+    rw [Field_.mul_assoc]
+    have h_inner2 : Field_.mul (inv d hd) (Field_.mul d b) = b := by
+      rw [←Field_.mul_assoc]
+      rw [Field_.mul_comm (inv d hd) d] -- הפיכת הסדר
+      rw [(MulInverseCancel d hd).left]
+      rw [(Field_.mul_neut b).left]
+    rw [h_inner2]
+  rw [←h2]
+  rw [←h3]
+  exact h1
