@@ -1,11 +1,11 @@
 import LinerAlgbra.chapter1_1
 
 class Field_ (A : Type) where
-  -- איברים ופעולות (נניח ש-Operation מוגדר כ- A → A → A)
+  -- איברים ופעולות (נניח ש-Operation מוגדר כ- Operation A A A)
   zero : A
   one : A
-  add : Operation A
-  mul : Operation A
+  add : Operation A A A
+  mul : Operation A A A
 
   -- הנחות על חיבור באמצעות ההגדרות שלך
   add_closed : IsClosedOp A add

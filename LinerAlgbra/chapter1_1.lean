@@ -5,32 +5,33 @@ import Mathlib.RingTheory.Localization.FractionRing
 
 
 
-def Operation (A : Type) : Type := A → A → A
+def Operation (A B C : Type) : Type := A → B → C
+
 -- הפעולה הזאת מיותרת מוסיף אותה כדאי להתרגל לכתיבה של lean
-def IsClosedOp (A : Type) (op : Operation A) : Prop := ∀ a b : A, ∃ c : A, c = op a b
+def IsClosedOp (A : Type) (op : Operation A A A) : Prop := ∀ a b : A, ∃ c : A, c = op a b
 
-def IsCommutativeOp (A : Type) (op : Operation A) : Prop := ∀ a b : A, op a b = op b a
+def IsCommutativeOp (A : Type) {C : Type} (op : A → A → C) : Prop := ∀ a b : A, op a b = op b a
 
-def IsAssociativeOp (A : Type) (op : Operation A) : Prop := ∀ a b c : A, op  (op a b) c = op a (op b c)
+def IsAssociativeOp (A : Type) (op : Operation A A A) : Prop := ∀ a b c : A, op  (op a b) c = op a (op b c)
 
-def IsDistributiveFromLeft (A:Type) (op1 : Operation A) (op2 : Operation A) : Prop := ∀ a b c : A, op1 a (op2 b c) = op2 (op1 a b) (op1 a c)
+def IsDistributiveFromLeft (A:Type) (op1 : Operation A A A) (op2 : Operation A A A) : Prop := ∀ a b c : A, op1 a (op2 b c) = op2 (op1 a b) (op1 a c)
 
-def IsDistributiveFromRight (A:Type) (op1 : Operation A) (op2 : Operation A) : Prop := ∀ a b c : A, op1 (op2 b c) a = op2 (op1 b a) (op1 c a)
+def IsDistributiveFromRight (A:Type) (op1 : Operation A A A) (op2 : Operation A A A) : Prop := ∀ a b c : A, op1 (op2 b c) a = op2 (op1 b a) (op1 c a)
 
-def IsDistributive (A:Type) (op1 : Operation A) (op2 : Operation A) : Prop := IsDistributiveFromLeft A op1 op2 ∧ IsDistributiveFromRight A op1 op2
+def IsDistributive (A:Type) (op1 : Operation A A A) (op2 : Operation A A A) : Prop := IsDistributiveFromLeft A op1 op2 ∧ IsDistributiveFromRight A op1 op2
 
 -- הגדרה: האם איבר ספציפי e הוא ניטרלי
-def IsNeutralElement (A : Type) (op : Operation A) (e : A) : Prop :=
+def IsNeutralElement (A : Type) (op : Operation A A A) (e : A) : Prop :=
   ∀ a : A, op e a = a ∧ op a e = a
 
 -- הגדרה: האם לקבוצה יש איבר ניטרלי (משתמשת בהגדרה הקודמת)
-def HasNeutralMember (A : Type) (op : Operation A) : Prop :=
+def HasNeutralMember (A : Type) (op : Operation A A A) : Prop :=
   ∃ e : A, IsNeutralElement A op e
 
-def IsInverseElement (A : Type) (op : Operation A) (e:A) (he: IsNeutralElement A op e) (a:A) : Prop := ∃ b : A, op a b = e ∧ op b a = e
+def IsInverseElement (A : Type) (op : Operation A A A) (e:A) (he: IsNeutralElement A op e) (a:A) : Prop := ∃ b : A, op a b = e ∧ op b a = e
 
 
-def AllElementsHaveInverse (A : Type) (op : Operation A) (e:A) (he: IsNeutralElement A op e) : Prop :=
+def AllElementsHaveInverse (A : Type) (op : Operation A A A) (e:A) (he: IsNeutralElement A op e) : Prop :=
   ∀ a : A, IsInverseElement A op e he a
 
 
@@ -50,7 +51,7 @@ theorem PNatNoAdditiveIdentity : ¬ HasNeutralMember ℕ+ (· + ·) := by
   omega
 
 -- משפט: לכל היותר איבר ניטרלי אחד
-theorem NeutralElementIsUnique (A : Type) (op : Operation A) :
+theorem NeutralElementIsUnique (A : Type) (op : Operation A A A) :
   -- לכל שני איברים שתביא לי:
   ∀ e1 e2 : A,
   -- אם e1 ניטרלי:
@@ -68,7 +69,7 @@ theorem NeutralElementIsUnique (A : Type) (op : Operation A) :
 
 
 
-theorem ExistsUniqueNeutralElement (A : Type) (op : Operation A) (h: HasNeutralMember A op) : ∃! e1 : A, ∀a : A, op e1 a = a ∧ op a e1 = a := by
+theorem ExistsUniqueNeutralElement (A : Type) (op : Operation A A A) (h: HasNeutralMember A op) : ∃! e1 : A, ∀a : A, op e1 a = a ∧ op a e1 = a := by
     obtain ⟨e, he⟩ := h
     use e
     apply And.intro
