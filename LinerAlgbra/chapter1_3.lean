@@ -145,6 +145,8 @@ def IsSystemSolution {A : Type} [Field_ A] {m n : Nat}
 def IsHomogeneous (A : Type) [Field_ A] {m n : Nat} (v : LinearSystem A m n) :=
   ∀ i : Fin m, (v.equations i).b = Field_.zero
 
+-- לא מהספר הוכחה שלי
+
 theorem sum_NTuple_zero {A : Type} [Field_ A] (n : Nat) :
     sum_NTuple (NTuple_zero : NTuple A n) = Field_.zero := by
     induction n with
@@ -158,7 +160,7 @@ theorem sum_NTuple_zero {A : Type} [Field_ A] (n : Nat) :
     rw[(Field_.add_neut (sum_NTuple fun i => NTuple_zero ⟨↑i, _⟩)).left]
     exact ih
 
-
+-- לא מהספר הוכחה שלי
 
 theorem sum_NTuple_neg {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) :
     sum_NTuple (NTuple_neg v) = neg (sum_NTuple v) := by
@@ -179,8 +181,7 @@ theorem sum_NTuple_neg {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) :
       rw[h]
       rfl
 
-
-
+-- לא מהספר הוכחה שלי
 
 theorem sum_NTuple_add {A : Type} [Field_ A] {n : Nat} (u v : NTuple A n) :
     sum_NTuple (NTuple_add u v) = Field_.add (sum_NTuple u) (sum_NTuple v) := by
@@ -334,6 +335,7 @@ theorem swapRowsOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat} (sys : Line
         rw[if_neg hki] at hk
         exact hk
 
+-- לא מהספר הוכחה שלי
 
 lemma dot_product_smul {A : Type} [Field_ A] {n : Nat}
     (c : A) (a x : NTuple A n) :
@@ -425,6 +427,8 @@ theorem scaleRowOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat}  (sys : Lin
     · have hk := h k
       rw [unfold_eq k, if_neg hki] at hk
       exact hk
+
+-- לא מהספר הוכחה שלי
 
 lemma dot_product_add {A : Type} [Field_ A] {n : Nat}
     (a b x : NTuple A n) :
