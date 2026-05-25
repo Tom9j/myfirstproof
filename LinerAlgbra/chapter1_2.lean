@@ -100,6 +100,9 @@ theorem FieldDistributiveLaw {A : Type} [Field_ A] : IsDistributive A Field_.mul
 
 
 
+
+
+
 theorem AdditiveInverseIsUnique {A : Type} [Field_ A] (a : A) :
   ∃! b : A, Field_.add a b = Field_.zero := by
 
@@ -167,6 +170,39 @@ noncomputable def inv {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) : A
 theorem MulInverseCancel {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) :
   Field_.mul a (inv a ha) = Field_.one ∧  Field_.mul (inv a ha) a = Field_.one := by
   exact (Classical.choose_spec (Field_.mul_inv a ha))
+
+
+lemma zeronegeqzero {A : Type} [Field_ A] : (Field_.zero : A) = neg (Field_.zero) := by
+  have h :  Field_.add (Field_.zero : A)  (neg (Field_.zero)) = Field_.zero := by
+    rw[(AddInverseCancel Field_.zero).left]
+  conv_lhs => rw[←h]
+  rw[(Field_.add_neut (neg (Field_.zero))).left]
+
+lemma AddCanBeFour {A : Type} [Field_ A] (a : A) (b : A) (c : A) (d : A) : Field_.add (Field_.add a b) (Field_.add c d) = Field_.add (Field_.add a d) (Field_.add b c) := by
+  rw[Field_.add_assoc]
+  rw[←Field_.add_assoc b]
+  rw[←Field_.add_comm d]
+  rw[Field_.add_assoc]
+
+
+lemma SumOfNegEQNEGADDNEG {A : Type} [Field_ A] (a: A) (b:A) : (neg (Field_.add a b)) = Field_.add (neg (a)) (neg (b)) := by
+  have h : Field_.add (Field_.add (neg (a)) (neg (b))) a = neg b := by
+    rw[Field_.add_comm]
+    rw[←Field_.add_assoc a (neg a) (neg b)]
+    rw[(AddInverseCancel a).left]
+    rw[(Field_.add_neut (neg b)).left]
+  have  h1 : Field_.add (Field_.add (neg (a)) (neg (b))) (Field_.add a b) = (Field_.zero : A) := by
+    rw[←Field_.add_assoc (Field_.add (neg (a)) (neg (b))) a b]
+    rw[h]
+    rw[(AddInverseCancel b).right]
+  have h2 : Field_.add (neg (Field_.add a b)) (Field_.add a b) = Field_.zero :=by exact (AddInverseCancel (Field_.add a b)).right
+  rw[Field_.add_comm] at h1 h2
+  obtain ⟨c, hc, huniq⟩ := AdditiveInverseIsUnique (Field_.add a b)
+  have h22 : (neg (Field_.add a b)) = c := (huniq (neg (Field_.add a b))) h2
+  have h12 : (Field_.add (neg (a)) (neg (b))) = c := (huniq (Field_.add (neg (a)) (neg (b)))) h1
+  rw[h22]
+  rw[h12]
+
 
 
 theorem MulByZeroIsZero {A : Type} [Field_ A] (a : A) : Field_.mul (a) (Field_.zero) = Field_.zero ∧  Field_.mul (Field_.zero) (a) = Field_.zero := by

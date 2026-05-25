@@ -145,6 +145,71 @@ def IsSystemSolution {A : Type} [Field_ A] {m n : Nat}
 def IsHomogeneous (A : Type) [Field_ A] {m n : Nat} (v : LinearSystem A m n) :=
   ∀ i : Fin m, (v.equations i).b = Field_.zero
 
+theorem sum_NTuple_zero {A : Type} [Field_ A] (n : Nat) :
+    sum_NTuple (NTuple_zero : NTuple A n) = Field_.zero := by
+    induction n with
+    | zero =>
+    rfl
+    | succ k ih =>
+    unfold sum_NTuple
+    have h : (NTuple_zero ⟨k, Nat.lt_succ_self k⟩ = (Field_.zero : A)) := by
+      rfl
+    rw[h]
+    rw[(Field_.add_neut (sum_NTuple fun i => NTuple_zero ⟨↑i, _⟩)).left]
+    exact ih
+
+
+
+theorem sum_NTuple_neg {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) :
+    sum_NTuple (NTuple_neg v) = neg (sum_NTuple v) := by
+    induction n with
+    | zero =>
+      unfold sum_NTuple
+      conv_lhs => rw[zeronegeqzero]
+
+    | succ k ih =>
+      unfold sum_NTuple
+
+      have ihv := ih ( fun (i : Fin k)=> v ⟨↑i,Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)
+      rw[SumOfNegEQNEGADDNEG]
+      rw[←ihv]
+      have h :  (NTuple_neg v ⟨k, Nat.lt_succ_self k⟩) = (neg (v ⟨k, Nat.lt_succ_self k⟩)) := by
+        unfold NTuple_neg
+        rfl
+      rw[h]
+      rfl
+
+
+
+
+theorem sum_NTuple_add {A : Type} [Field_ A] {n : Nat} (u v : NTuple A n) :
+    sum_NTuple (NTuple_add u v) = Field_.add (sum_NTuple u) (sum_NTuple v) := by
+    unfold NTuple_add
+    induction n with
+    |zero =>
+      unfold sum_NTuple
+      rw[(Field_.add_neut Field_.zero).left]
+    | succ k ih =>
+      unfold sum_NTuple
+      rw[Field_.add_comm (u ⟨k, _⟩) (sum_NTuple fun i => u ⟨↑i, _⟩)]
+      have h : Field_.add (u ⟨k, Nat.lt_succ_self k⟩) (v ⟨k, _⟩) = ((fun i => Field_.add (u i) (v i)) ⟨k, _⟩) := rfl
+      rw[←h]
+      have h2 : (fun (i : Fin k) => (fun (j : Fin (k+1)) => Field_.add (u j) (v j)) ⟨↑i,Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)
+              = (fun (i : Fin k) => Field_.add (u ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) (v ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)) := by
+        rfl
+      rw[h2]
+      let u' := (fun (i : Fin k) => u ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)
+      let v' := (fun (i : Fin k) => v ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)
+      have ihv := ih  u' v'
+      rw[ihv]
+      have hl : (fun (i : Fin k) => u ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) = u' := rfl
+      have hl2 : (fun (i : Fin k) => v ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) = v' := rfl
+      rw[hl]
+      rw[hl2]
+      rw[AddCanBeFour (sum_NTuple u') (u ⟨k, _⟩) (v ⟨k, _⟩) (sum_NTuple v')]
+      rw[Field_.add_comm]
+
+
 lemma dot_product_with_zero {A : Type} [Field_ A] {n : Nat}
     (v : NTuple A n) : NTuple_dot_product v NTuple_zero = Field_.zero := by
     unfold NTuple_dot_product NTuple_zero
