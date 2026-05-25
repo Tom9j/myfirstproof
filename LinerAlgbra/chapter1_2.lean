@@ -171,12 +171,15 @@ theorem MulInverseCancel {A : Type} [Field_ A] (a : A) (ha : a ≠ Field_.zero) 
   Field_.mul a (inv a ha) = Field_.one ∧  Field_.mul (inv a ha) a = Field_.one := by
   exact (Classical.choose_spec (Field_.mul_inv a ha))
 
+-- לא מהספר הוכחה שלי
 
 lemma zeronegeqzero {A : Type} [Field_ A] : (Field_.zero : A) = neg (Field_.zero) := by
   have h :  Field_.add (Field_.zero : A)  (neg (Field_.zero)) = Field_.zero := by
     rw[(AddInverseCancel Field_.zero).left]
   conv_lhs => rw[←h]
   rw[(Field_.add_neut (neg (Field_.zero))).left]
+
+-- לא מהספר הוכחה שלי
 
 lemma AddCanBeFour {A : Type} [Field_ A] (a : A) (b : A) (c : A) (d : A) : Field_.add (Field_.add a b) (Field_.add c d) = Field_.add (Field_.add a d) (Field_.add b c) := by
   rw[Field_.add_assoc]
