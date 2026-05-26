@@ -4,98 +4,107 @@ import LinerAlgbra.chapter1_2
 -- הגדרות בסיסיות: וקטור, שוויון
 -- ==========================================
 
-def NTuple (A : Type) (n : Nat) := Fin n → A
+def Ntuple (A : Type) (n : Nat) := Fin n → A
 
-def NTuple_Equal {A : Type} {n : Nat} (u v : NTuple A n) : Prop :=
+def Ntuple_Equal {A : Type} {n : Nat} (u v : Ntuple A n) : Prop :=
   ∀ i, u i = v i
 
 -- ==========================================
 -- חיבור וקטורים
 -- ==========================================
 
-def NTuple_add {A : Type} [Field_ A] {n : Nat} : Operation (NTuple A n) (NTuple A n) (NTuple A n) :=
+def Ntuple_add {A : Type} [Field_ A] {n : Nat} : Operation (Ntuple A n) (Ntuple A n) (Ntuple A n) :=
   fun u v => fun i => Field_.add (u i) (v i)
 
-theorem NTuple_add_Is_Closed {A : Type} [Field_ A] {n : Nat}: IsClosedOp (NTuple A n) NTuple_add := by
+theorem Ntuple_add_Is_Closed {A : Type} [Field_ A] {n : Nat}: IsClosedOp (Ntuple A n) Ntuple_add := by
   unfold IsClosedOp
   intro a b
-  use (NTuple_add a b)
+  use (Ntuple_add a b)
 
-theorem NTuple_add_Is_Assoc {A : Type} [Field_ A] {n : Nat} : IsAssociativeOp (NTuple A n) NTuple_add := by
+theorem Ntuple_Add_Is_Assoc {A : Type} [Field_ A] {n : Nat} :
+    IsAssociativeOp (Ntuple A n) Ntuple_add := by
   unfold IsAssociativeOp
   intro a b c
   funext i
-  unfold NTuple_add
+  unfold Ntuple_add
   rw [Field_.add_assoc]
 
-theorem NTuple_add_Is_Comm {A : Type} [Field_ A] {n : Nat} : IsCommutativeOp (NTuple A n) NTuple_add := by
+theorem Ntuple_Add_comm {A : Type} {n : Nat} [Field_ A] :
+    IsCommutativeOp (Ntuple A n) (Ntuple_add) := by
   unfold IsCommutativeOp
   intro a b
-  unfold NTuple_add
-  funext i
+  unfold Ntuple_add
+  funext x
   rw[Field_.add_comm]
 
-def NTuple_zero {A : Type} [Field_ A] {n : Nat} : NTuple A n :=
+def Ntuple_zero {A : Type} [Field_ A] {n : Nat} : Ntuple A n :=
   fun _ => Field_.zero
 
-theorem NTuple_add_zero {A : Type} [Field_ A] {n : Nat}: IsNeutralElement (NTuple A n) (NTuple_add) (NTuple_zero) := by
-  unfold IsNeutralElement
+theorem Ntuple_add_neut {A : Type} {n : Nat} [Field_ A] :
+    IsNeutralElement (Ntuple A n) (Ntuple_add) (Ntuple_zero) := by
+  unfold IsNeutralElement Ntuple_add Ntuple_zero
   intro a
-  unfold NTuple_add NTuple_zero
-  apply And.intro
-  funext i
-  rw [(Field_.add_neut (a i)).left]
-  funext i
-  rw [(Field_.add_neut (a i)).right]
+  constructor
+  · funext x
+    rw[(Field_.add_neut (a x)).left]
+  · funext x
+    rw[(Field_.add_neut (a x)).right]
 
-theorem NTuple_all_element_has_neg {A : Type} [Field_ A] {n : Nat} : AllElementsHaveInverse (NTuple A n) (NTuple_add) NTuple_zero NTuple_add_zero := by
-  unfold AllElementsHaveInverse
+noncomputable def Ntuple_neg {A : Type} [Field_ A] {n : Nat} (v : Ntuple A n) : Ntuple A n :=
+  fun i => neg (v i)
+
+theorem Ntuple_add_HasInv {A : Type} {n : Nat} [Field_ A] :
+    AllElementsHaveInverse (Ntuple A n) Ntuple_add Ntuple_zero Ntuple_add_neut := by
+  unfold AllElementsHaveInverse Ntuple_add
   intro a
   unfold IsInverseElement
-  use (fun i => neg (a i))
-  unfold NTuple_add NTuple_zero
-  apply And.intro
-  funext i
-  rw[(AddInverseCancel (a i)).left]
-  funext i
-  rw[(AddInverseCancel (a i)).right]
+  use Ntuple_neg a
+  unfold Ntuple_neg
+  constructor
+  · funext x
+    have h : (fun (u : Ntuple A n) (v : Ntuple A n) (i : Fin n) => Field_.add (u i) (v i)) a (fun i => -(a i)) x = Field_.add (a x) (neg (a x)) := rfl
+    rw[h]
+    rw[(AddInverseCancel (a x)).left]
+    rfl
+  · funext x
+    have h : (fun (u : Ntuple A n) (v : Ntuple A n) (i : Fin n) => Field_.add (u i) (v i)) (fun i => -(a i)) a x = Field_.add (neg (a x)) (a x) := rfl
+    rw[h]
+    rw[(AddInverseCancel (a x)).right]
+    rfl
 
 -- ==========================================
 -- כפל בסקלר
 -- ==========================================
 
-def NTuple_smul {A : Type} [Field_ A] {n : Nat} : Operation A (NTuple A n) (NTuple A n) :=
+def Ntuple_smul {A : Type} [Field_ A] {n : Nat} : Operation A (Ntuple A n) (Ntuple A n) :=
   fun c v => fun i => Field_.mul c (v i)
 
-theorem NTuple_smul_on_zero {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) : NTuple_smul Field_.zero v = NTuple_zero := by
+theorem Ntuple_smul_on_zero {A : Type} [Field_ A] {n : Nat} (v : Ntuple A n) : Ntuple_smul Field_.zero v = Ntuple_zero := by
   funext i
-  unfold NTuple_smul NTuple_zero
+  unfold Ntuple_smul Ntuple_zero
   rw [(MulByZeroIsZero (v i)).right]
 
-theorem NTuple_smul_mulbyone {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) : NTuple_smul Field_.one v = v := by
-  unfold NTuple_smul
+theorem Ntuple_smul_mulbyone {A : Type} [Field_ A] {n : Nat} (v : Ntuple A n) : Ntuple_smul Field_.one v = v := by
+  unfold Ntuple_smul
   funext i
   rw[(Field_.mul_neut (v i)).left]
 
-noncomputable def NTuple_neg {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) : NTuple A n :=
-  fun i => neg (v i)
-
-theorem NTuple_smul_mulbynegone {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) : NTuple_smul (neg (Field_.one)) v = (NTuple_neg v) := by
-  unfold NTuple_smul NTuple_neg
+theorem Ntuple_smul_mulbynegone {A : Type} [Field_ A] {n : Nat} (v : Ntuple A n) : Ntuple_smul (neg (Field_.one)) v = (Ntuple_neg v) := by
+  unfold Ntuple_smul Ntuple_neg
   funext i
   rw[(OneNegTimesEqNeg (v i)).left]
 
 -- 1. חוק הקיבוציות המדויק לכפל בסקלר: (a * b) * v = a * (b * v)
-theorem NTuple_smul_assoc_true {A : Type} [Field_ A] {n : Nat} (a b : A) (v : NTuple A n) :
-  NTuple_smul (Field_.mul a b) v = NTuple_smul a (NTuple_smul b v) := by
-  unfold NTuple_smul
+theorem Ntuple_smul_assoc_true {A : Type} [Field_ A] {n : Nat} (a b : A) (v : Ntuple A n) :
+  Ntuple_smul (Field_.mul a b) v = Ntuple_smul a (Ntuple_smul b v) := by
+  unfold Ntuple_smul
   funext i
   rw [Field_.mul_assoc]
 
 -- 2. חילוף סקלרים: כפל ב-a ואז ב-b שווה לכפל ב-b ואז ב-a
-theorem NTuple_smul_scalars_comm {A : Type} [Field_ A] {n : Nat} (a b : A) (v : NTuple A n) :
-  NTuple_smul b (NTuple_smul a v) = NTuple_smul a (NTuple_smul b v) := by
-  unfold NTuple_smul
+theorem Ntuple_smul_scalars_comm {A : Type} [Field_ A] {n : Nat} (a b : A) (v : Ntuple A n) :
+  Ntuple_smul b (Ntuple_smul a v) = Ntuple_smul a (Ntuple_smul b v) := by
+  unfold Ntuple_smul
   funext i
   rw [Field_.mul_comm a (v i)]
   rw [←Field_.mul_assoc b (v i) a]
@@ -106,40 +115,40 @@ theorem NTuple_smul_scalars_comm {A : Type} [Field_ A] {n : Nat} (a b : A) (v : 
 -- ==========================================
 
 -- פילוג משמאל (סקלר כפול סכום וקטורים)
-theorem NTuple_smul_distrib_left {A : Type} [Field_ A] {n : Nat} (c : A) (u v : NTuple A n) :
-  NTuple_smul c (NTuple_add u v) = NTuple_add (NTuple_smul c u) (NTuple_smul c v) := by
-  unfold NTuple_smul NTuple_add
+theorem Ntuple_smul_distrib_left {A : Type} [Field_ A] {n : Nat} (c : A) (u v : Ntuple A n) :
+  Ntuple_smul c (Ntuple_add u v) = Ntuple_add (Ntuple_smul c u) (Ntuple_smul c v) := by
+  unfold Ntuple_smul Ntuple_add
   funext i
   exact Field_.distribLeft c (u i) (v i)
 
 -- פילוג מימין (סכום סקלרים כפול וקטור)
-theorem NTuple_smul_distrib_right {A : Type} [Field_ A] {n : Nat} (a b : A) (v : NTuple A n) :
-  NTuple_smul (Field_.add a b) v = NTuple_add (NTuple_smul a v) (NTuple_smul b v) := by
-  unfold NTuple_smul NTuple_add
+theorem Ntuple_smul_distrib_right {A : Type} [Field_ A] {n : Nat} (a b : A) (v : Ntuple A n) :
+  Ntuple_smul (Field_.add a b) v = Ntuple_add (Ntuple_smul a v) (Ntuple_smul b v) := by
+  unfold Ntuple_smul Ntuple_add
   funext i
   exact FieldDistributiveLaw.right (v i) a b
 
-def sum_NTuple {A : Type} [Field_ A] : {n : Nat} → NTuple A n → A
+def sum_Ntuple {A : Type} [Field_ A] : {n : Nat} → Ntuple A n → A
   | 0, _ => Field_.zero
   | k + 1, v => Field_.add (v ⟨k, Nat.lt_succ_self k⟩)
-                           (sum_NTuple (fun i => v ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩))
+                           (sum_Ntuple (fun i => v ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩))
 
-def NTuple_dot_product {A : Type} [Field_ A] {n : Nat} (a x : NTuple A n) : A :=
-  sum_NTuple (fun i => Field_.mul (a i) (x i))
+def Ntuple_dot_product {A : Type} [Field_ A] {n : Nat} (a x : Ntuple A n) : A :=
+  sum_Ntuple (fun i => Field_.mul (a i) (x i))
 
 structure LinearEquation (A : Type) [Field_ A] (n : Nat) where
-  a : NTuple A n
+  a : Ntuple A n
   b : A
 
 def IsSolution {A : Type} [Field_ A] {n : Nat}
-    (eq : LinearEquation A n) (x : NTuple A n) : Prop :=
-  NTuple_dot_product eq.a x = eq.b
+    (eq : LinearEquation A n) (x : Ntuple A n) : Prop :=
+  Ntuple_dot_product eq.a x = eq.b
 
 structure LinearSystem (A : Type) [Field_ A] (m n : Nat) where
-  equations : NTuple (LinearEquation A n) m
+  equations : Ntuple (LinearEquation A n) m
 
 def IsSystemSolution {A : Type} [Field_ A] {m n : Nat}
-    (sys : LinearSystem A m n) (x : NTuple A n) : Prop :=
+    (sys : LinearSystem A m n) (x : Ntuple A n) : Prop :=
   ∀ i : Fin m, IsSolution (sys.equations i) x
 
 def IsHomogeneous (A : Type) [Field_ A] {m n : Nat} (v : LinearSystem A m n) :=
@@ -147,52 +156,52 @@ def IsHomogeneous (A : Type) [Field_ A] {m n : Nat} (v : LinearSystem A m n) :=
 
 -- לא מהספר הוכחה שלי
 
-theorem sum_NTuple_zero {A : Type} [Field_ A] (n : Nat) :
-    sum_NTuple (NTuple_zero : NTuple A n) = Field_.zero := by
+theorem sum_Ntuple_zero {A : Type} [Field_ A] (n : Nat) :
+    sum_Ntuple (Ntuple_zero : Ntuple A n) = Field_.zero := by
     induction n with
     | zero =>
     rfl
     | succ k ih =>
-    unfold sum_NTuple
-    have h : (NTuple_zero ⟨k, Nat.lt_succ_self k⟩ = (Field_.zero : A)) := by
+    unfold sum_Ntuple
+    have h : (Ntuple_zero ⟨k, Nat.lt_succ_self k⟩ = (Field_.zero : A)) := by
       rfl
     rw[h]
-    rw[(Field_.add_neut (sum_NTuple fun i => NTuple_zero ⟨↑i, _⟩)).left]
+    rw[(Field_.add_neut (sum_Ntuple fun i => Ntuple_zero ⟨↑i, _⟩)).left]
     exact ih
 
 -- לא מהספר הוכחה שלי
 
-theorem sum_NTuple_neg {A : Type} [Field_ A] {n : Nat} (v : NTuple A n) :
-    sum_NTuple (NTuple_neg v) = neg (sum_NTuple v) := by
+theorem sum_Ntuple_neg {A : Type} [Field_ A] {n : Nat} (v : Ntuple A n) :
+    sum_Ntuple (Ntuple_neg v) = neg (sum_Ntuple v) := by
     induction n with
     | zero =>
-      unfold sum_NTuple
+      unfold sum_Ntuple
       conv_lhs => rw[zeronegeqzero]
 
     | succ k ih =>
-      unfold sum_NTuple
+      unfold sum_Ntuple
 
       have ihv := ih ( fun (i : Fin k)=> v ⟨↑i,Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)
       rw[SumOfNegEQNEGADDNEG]
       rw[←ihv]
-      have h :  (NTuple_neg v ⟨k, Nat.lt_succ_self k⟩) = (neg (v ⟨k, Nat.lt_succ_self k⟩)) := by
-        unfold NTuple_neg
+      have h :  (Ntuple_neg v ⟨k, Nat.lt_succ_self k⟩) = (neg (v ⟨k, Nat.lt_succ_self k⟩)) := by
+        unfold Ntuple_neg
         rfl
       rw[h]
       rfl
 
 -- לא מהספר הוכחה שלי
 
-theorem sum_NTuple_add {A : Type} [Field_ A] {n : Nat} (u v : NTuple A n) :
-    sum_NTuple (NTuple_add u v) = Field_.add (sum_NTuple u) (sum_NTuple v) := by
-    unfold NTuple_add
+theorem sum_Ntuple_add {A : Type} [Field_ A] {n : Nat} (u v : Ntuple A n) :
+    sum_Ntuple (Ntuple_add u v) = Field_.add (sum_Ntuple u) (sum_Ntuple v) := by
+    unfold Ntuple_add
     induction n with
     |zero =>
-      unfold sum_NTuple
+      unfold sum_Ntuple
       rw[(Field_.add_neut Field_.zero).left]
     | succ k ih =>
-      unfold sum_NTuple
-      rw[Field_.add_comm (u ⟨k, _⟩) (sum_NTuple fun i => u ⟨↑i, _⟩)]
+      unfold sum_Ntuple
+      rw[Field_.add_comm (u ⟨k, _⟩) (sum_Ntuple fun i => u ⟨↑i, _⟩)]
       have h : Field_.add (u ⟨k, Nat.lt_succ_self k⟩) (v ⟨k, _⟩) = ((fun i => Field_.add (u i) (v i)) ⟨k, _⟩) := rfl
       rw[←h]
       have h2 : (fun (i : Fin k) => (fun (j : Fin (k+1)) => Field_.add (u j) (v j)) ⟨↑i,Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩)
@@ -207,13 +216,13 @@ theorem sum_NTuple_add {A : Type} [Field_ A] {n : Nat} (u v : NTuple A n) :
       have hl2 : (fun (i : Fin k) => v ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) = v' := rfl
       rw[hl]
       rw[hl2]
-      rw[AddCanBeFour (sum_NTuple u') (u ⟨k, _⟩) (v ⟨k, _⟩) (sum_NTuple v')]
+      rw[AddCanBeFour (sum_Ntuple u') (u ⟨k, _⟩) (v ⟨k, _⟩) (sum_Ntuple v')]
       rw[Field_.add_comm]
 
 
 lemma dot_product_with_zero {A : Type} [Field_ A] {n : Nat}
-    (v : NTuple A n) : NTuple_dot_product v NTuple_zero = Field_.zero := by
-    unfold NTuple_dot_product NTuple_zero
+    (v : Ntuple A n) : Ntuple_dot_product v Ntuple_zero = Field_.zero := by
+    unfold Ntuple_dot_product Ntuple_zero
     have h : (fun i => Field_.mul (v i) Field_.zero) = fun (anyIndex : Fin n) => Field_.zero := by
       funext i
       exact (MulByZeroIsZero (v i)).left
@@ -221,10 +230,10 @@ lemma dot_product_with_zero {A : Type} [Field_ A] {n : Nat}
     clear v h
     induction n with
     | zero =>
-        unfold sum_NTuple
+        unfold sum_Ntuple
         rfl
     | succ n ih =>
-        unfold sum_NTuple
+        unfold sum_Ntuple
         have h2 : (fun i : Fin n => (fun (bigIndex : Fin (n+1)) => (Field_.zero : A))
                   ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self n)⟩) =
                   fun (anyIndex : Fin n) => (Field_.zero : A) := by
@@ -233,8 +242,8 @@ lemma dot_product_with_zero {A : Type} [Field_ A] {n : Nat}
         rw [h2, ih]
         exact (Field_.add_neut Field_.zero).left
 
-theorem IfxEqZeroThesEveryHomogeneouswithxHasSolution (A : Type) [Field_ A] {m n : Nat} (v : LinearSystem A m n) (h : IsHomogeneous A v) : IsSystemSolution v NTuple_zero := by
-  unfold IsSystemSolution NTuple_zero
+theorem IfxEqZeroThesEveryHomogeneouswithxHasSolution (A : Type) [Field_ A] {m n : Nat} (v : LinearSystem A m n) (h : IsHomogeneous A v) : IsSystemSolution v Ntuple_zero := by
+  unfold IsSystemSolution Ntuple_zero
   unfold IsHomogeneous at h
   intro i
   unfold IsSolution
@@ -245,7 +254,7 @@ theorem IfxEqZeroThesEveryHomogeneouswithxHasSolution (A : Type) [Field_ A] {m n
 def AreEquivalent {A : Type} [Field_ A] {m₁ m₂ n : Nat}
     (sys1 : LinearSystem A m₁ n)
     (sys2 : LinearSystem A m₂ n) : Prop :=
-  ∀ x : NTuple A n, IsSystemSolution sys1 x ↔ IsSystemSolution sys2 x
+  ∀ x : Ntuple A n, IsSystemSolution sys1 x ↔ IsSystemSolution sys2 x
 
 def swapRows {A : Type} [Field_ A] {m n : Nat}
     (sys : LinearSystem A m n) (i j : Fin m) : LinearSystem A m n :=
@@ -257,14 +266,14 @@ def swapRows {A : Type} [Field_ A] {m n : Nat}
 def scaleRow {A : Type} [Field_ A] {m n : Nat}
     (sys : LinearSystem A m n) (i : Fin m) (c : A) : LinearSystem A m n :=
   { equations := fun k =>
-      if k = i then { a := NTuple_smul c (sys.equations i).a,
+      if k = i then { a := Ntuple_smul c (sys.equations i).a,
                       b := Field_.mul c (sys.equations i).b }
       else sys.equations k }
 
 def addRow {A : Type} [Field_ A] {m n : Nat}
     (sys : LinearSystem A m n) (i j : Fin m) (c : A) : LinearSystem A m n :=
   { equations := fun k =>
-      if k = j then { a := NTuple_add (sys.equations j).a (NTuple_smul c (sys.equations i).a),
+      if k = j then { a := Ntuple_add (sys.equations j).a (Ntuple_smul c (sys.equations i).a),
                       b := Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b) }
       else sys.equations k }
 
@@ -338,31 +347,31 @@ theorem swapRowsOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat} (sys : Line
 -- לא מהספר הוכחה שלי
 
 lemma dot_product_smul {A : Type} [Field_ A] {n : Nat}
-    (c : A) (a x : NTuple A n) :
-    NTuple_dot_product (NTuple_smul c a) x = Field_.mul c (NTuple_dot_product a x) := by
+    (c : A) (a x : Ntuple A n) :
+    Ntuple_dot_product (Ntuple_smul c a) x = Field_.mul c (Ntuple_dot_product a x) := by
   induction n with
   | zero =>
-    unfold NTuple_dot_product
-    unfold sum_NTuple
+    unfold Ntuple_dot_product
+    unfold sum_Ntuple
     rw[(MulByZeroIsZero c).left]
 
   | succ k ih =>
-    unfold NTuple_dot_product
-    unfold sum_NTuple
-    unfold NTuple_smul
+    unfold Ntuple_dot_product
+    unfold sum_Ntuple
+    unfold Ntuple_smul
     have Lh : (fun i => Field_.mul (a i) (x i)) ⟨k, Nat.lt_succ_self k⟩ =
        Field_.mul (a ⟨k,Nat.lt_succ_self k⟩) (x ⟨k,Nat.lt_succ_self k⟩) := rfl
     have Lh2 : (fun i => Field_.mul (Field_.mul c (a i)) (x i)) ⟨k, Nat.lt_succ_self k⟩ =
        Field_.mul (Field_.mul c  (a ⟨k,Nat.lt_succ_self k⟩) ) (x ⟨k, Nat.lt_succ_self k⟩) := by rfl
     rw[Lh]
     rw[Lh2]
-    let a' : NTuple A k := fun i => a ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
-    let x' : NTuple A k := fun i => x ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
+    let a' : Ntuple A k := fun i => a ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
+    let x' : Ntuple A k := fun i => x ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
     have ihk := (ih a' x')
-    unfold NTuple_dot_product at ihk
-    unfold NTuple_smul at ihk
-    have ha' : (sum_NTuple fun i => (fun i => Field_.mul (Field_.mul c (a i)) (x i)) ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) =
-           (sum_NTuple fun i => Field_.mul (Field_.mul c (a' i)) (x' i)) := rfl
+    unfold Ntuple_dot_product at ihk
+    unfold Ntuple_smul at ihk
+    have ha' : (sum_Ntuple fun i => (fun i => Field_.mul (Field_.mul c (a i)) (x i)) ⟨↑i, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) =
+           (sum_Ntuple fun i => Field_.mul (Field_.mul c (a' i)) (x' i)) := rfl
     rw[ha']
     rw [Field_.distribLeft c]
     rw [← Field_.mul_assoc c (a ⟨k, Nat.lt_succ_self k⟩) (x ⟨k, Nat.lt_succ_self k⟩)]
@@ -374,17 +383,17 @@ theorem scaleRowOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat}  (sys : Lin
   unfold IsSystemSolution scaleRow
   have unfold_eq : ∀ k : Fin m,
     (({ equations := fun k =>
-        if k = i then { a := NTuple_smul c (sys.equations i).a,
+        if k = i then { a := Ntuple_smul c (sys.equations i).a,
                         b := Field_.mul c (sys.equations i).b }
         else sys.equations k } : LinearSystem A m n).equations k) =
-    (if k = i then { a := NTuple_smul c (sys.equations i).a,
+    (if k = i then { a := Ntuple_smul c (sys.equations i).a,
                      b := Field_.mul c (sys.equations i).b }
      else sys.equations k) := fun k => rfl
-  have ha : (LinearEquation.mk (NTuple_smul c (sys.equations i).a)
+  have ha : (LinearEquation.mk (Ntuple_smul c (sys.equations i).a)
                                 (Field_.mul c (sys.equations i).b)).a =
-            NTuple_smul c (sys.equations i).a := rfl
+            Ntuple_smul c (sys.equations i).a := rfl
 
-  have hb : (LinearEquation.mk (NTuple_smul c (sys.equations i).a)
+  have hb : (LinearEquation.mk (Ntuple_smul c (sys.equations i).a)
                                 (Field_.mul c (sys.equations i).b)).b =
             Field_.mul c (sys.equations i).b := rfl
 
@@ -415,8 +424,8 @@ theorem scaleRowOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat}  (sys : Lin
       rw [ha, hb] at hk
       rw [dot_product_smul] at hk
       rw [hki]
-      have hcancel : NTuple_dot_product (sys.equations i).a x = (sys.equations i).b := by
-        have h1 : Field_.mul (inv c hc) (Field_.mul c (NTuple_dot_product (sys.equations i).a x)) =
+      have hcancel : Ntuple_dot_product (sys.equations i).a x = (sys.equations i).b := by
+        have h1 : Field_.mul (inv c hc) (Field_.mul c (Ntuple_dot_product (sys.equations i).a x)) =
                   Field_.mul (inv c hc) (Field_.mul c (sys.equations i).b) := by
           rw [hk]
         rw [← Field_.mul_assoc, ← Field_.mul_assoc] at h1
@@ -431,28 +440,28 @@ theorem scaleRowOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat}  (sys : Lin
 -- לא מהספר הוכחה שלי
 
 lemma dot_product_add {A : Type} [Field_ A] {n : Nat}
-    (a b x : NTuple A n) :
-    NTuple_dot_product (NTuple_add a b) x =
-    Field_.add (NTuple_dot_product a x) (NTuple_dot_product b x) := by
+    (a b x : Ntuple A n) :
+    Ntuple_dot_product (Ntuple_add a b) x =
+    Field_.add (Ntuple_dot_product a x) (Ntuple_dot_product b x) := by
   induction n with
   | zero =>
-      unfold NTuple_dot_product NTuple_add sum_NTuple
+      unfold Ntuple_dot_product Ntuple_add sum_Ntuple
       rw [(Field_.add_neut (Field_.zero : A)).left]
   | succ k ih =>
-      unfold NTuple_dot_product NTuple_add sum_NTuple
-      let a' : NTuple A k := fun i => a ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
-      let b' : NTuple A k := fun i => b ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
-      let x' : NTuple A k := fun i => x ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
+      unfold Ntuple_dot_product Ntuple_add sum_Ntuple
+      let a' : Ntuple A k := fun i => a ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
+      let b' : Ntuple A k := fun i => b ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
+      let x' : Ntuple A k := fun i => x ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩
       have ihk := ih a' b' x'
-      unfold NTuple_dot_product NTuple_add at ihk
+      unfold Ntuple_dot_product Ntuple_add at ihk
       have hk : (fun i => Field_.mul (Field_.add (a i) (b i)) (x i)) ⟨k, Nat.lt_succ_self k⟩ =
                 Field_.add (Field_.mul (a ⟨k, Nat.lt_succ_self k⟩) (x ⟨k, Nat.lt_succ_self k⟩))
                            (Field_.mul (b ⟨k, Nat.lt_succ_self k⟩) (x ⟨k, Nat.lt_succ_self k⟩)) :=
         FieldDistributiveLaw.right (x ⟨k, Nat.lt_succ_self k⟩) (a ⟨k, Nat.lt_succ_self k⟩) (b ⟨k, Nat.lt_succ_self k⟩)
-      have hsum : (sum_NTuple fun (i : Fin k) =>
+      have hsum : (sum_Ntuple fun (i : Fin k) =>
                     (fun i => Field_.mul (Field_.add (a i) (b i)) (x i)) ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) =
-                  Field_.add (sum_NTuple fun (i : Fin k) => Field_.mul (a' i) (x' i))
-                             (sum_NTuple fun (i : Fin k) => Field_.mul (b' i) (x' i)) := by
+                  Field_.add (sum_Ntuple fun (i : Fin k) => Field_.mul (a' i) (x' i))
+                             (sum_Ntuple fun (i : Fin k) => Field_.mul (b' i) (x' i)) := by
         have heq : (fun (i : Fin k) => (fun i => Field_.mul (Field_.add (a i) (b i)) (x i))
                     ⟨i.val, Nat.lt_trans i.isLt (Nat.lt_succ_self k)⟩) =
                    (fun (i : Fin k) => Field_.mul (Field_.add (a' i) (b' i)) (x' i)) := by funext i; rfl
@@ -473,19 +482,19 @@ theorem addRowOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat}
   have unfold_eq : ∀ k : Fin m,
       (({ equations := fun k =>
           if k = j then
-            { a := NTuple_add (sys.equations j).a (NTuple_smul c (sys.equations i).a),
+            { a := Ntuple_add (sys.equations j).a (Ntuple_smul c (sys.equations i).a),
               b := Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b) }
           else sys.equations k } : LinearSystem A m n).equations k) =
       (if k = j then
-            { a := NTuple_add (sys.equations j).a (NTuple_smul c (sys.equations i).a),
+            { a := Ntuple_add (sys.equations j).a (Ntuple_smul c (sys.equations i).a),
               b := Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b) }
           else sys.equations k) := fun k => rfl
   have ha' : (LinearEquation.mk
-                (NTuple_add (sys.equations j).a (NTuple_smul c (sys.equations i).a))
+                (Ntuple_add (sys.equations j).a (Ntuple_smul c (sys.equations i).a))
                 (Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b))).a =
-             NTuple_add (sys.equations j).a (NTuple_smul c (sys.equations i).a) := rfl
+             Ntuple_add (sys.equations j).a (Ntuple_smul c (sys.equations i).a) := rfl
   have hb' : (LinearEquation.mk
-                (NTuple_add (sys.equations j).a (NTuple_smul c (sys.equations i).a))
+                (Ntuple_add (sys.equations j).a (Ntuple_smul c (sys.equations i).a))
                 (Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b))).b =
              Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b) := rfl
   unfold addRow
@@ -512,7 +521,7 @@ theorem addRowOutputIsEquivalent {A : Type} [Field_ A] {m n : Nat}
       rw [hi] at hj
       rw [hkj]
       have h1 : Field_.add
-                  (Field_.add (NTuple_dot_product (sys.equations j).a x) (Field_.mul c (sys.equations i).b))
+                  (Field_.add (Ntuple_dot_product (sys.equations j).a x) (Field_.mul c (sys.equations i).b))
                   (neg (Field_.mul c (sys.equations i).b)) =
                 Field_.add
                   (Field_.add (sys.equations j).b (Field_.mul c (sys.equations i).b))
