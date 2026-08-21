@@ -292,7 +292,9 @@ theorem MultiplicativeInverseIsUnique {A : Type} [Field_ A] (a : A) (ha : a ≠ 
 
 noncomputable def neg {A : Type} [Field_ A] (a : A) : A :=
   Classical.choose (Field_.add_inv a)
-prefix:max "-" => neg
+-- NOTE: the notation  prefix:max "-" => neg  was removed. It competed with
+-- Mathlib's Neg.neg, so any concrete literal such as (-2 : Rat) became ambiguous.
+-- Write  neg x  explicitly instead.
 
 theorem AddInverseCancel {A : Type} [Field_ A] (a : A) :
   Field_.add a (neg a) = Field_.zero ∧ Field_.add (neg a) a = Field_.zero:= by

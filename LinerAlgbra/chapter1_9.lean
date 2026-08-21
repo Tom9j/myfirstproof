@@ -1,5 +1,4 @@
 import LinerAlgbra.chapter1_8
+import Mathlib.Tactic.FinCases
 
--- Chapter 1.9: first elimination examples
-
--- Elimination examples will be added here when this section is studied.
+namespace Chapter1_9

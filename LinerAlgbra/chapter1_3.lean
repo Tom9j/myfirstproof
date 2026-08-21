@@ -60,12 +60,12 @@ theorem Ntuple_add_HasInv {A : Type} {n : Nat} [Field_ A] :
   unfold Ntuple_neg
   constructor
   · funext x
-    have h : (fun (u : Ntuple A n) (v : Ntuple A n) (i : Fin n) => Field_.add (u i) (v i)) a (fun i => -(a i)) x = Field_.add (a x) (neg (a x)) := rfl
+    have h : (fun (u : Ntuple A n) (v : Ntuple A n) (i : Fin n) => Field_.add (u i) (v i)) a (fun i => neg (a i)) x = Field_.add (a x) (neg (a x)) := rfl
     rw[h]
     rw[(AddInverseCancel (a x)).left]
     rfl
   · funext x
-    have h : (fun (u : Ntuple A n) (v : Ntuple A n) (i : Fin n) => Field_.add (u i) (v i)) (fun i => -(a i)) a x = Field_.add (neg (a x)) (a x) := rfl
+    have h : (fun (u : Ntuple A n) (v : Ntuple A n) (i : Fin n) => Field_.add (u i) (v i)) (fun i => neg (a i)) a x = Field_.add (neg (a x)) (a x) := rfl
     rw[h]
     rw[(AddInverseCancel (a x)).right]
     rfl

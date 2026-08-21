@@ -5,7 +5,7 @@ import LinerAlgbra.chapter1_7
 -- Read an augmented matrix as a general linear system.
 -- The first n entries of every row are the coefficients, and the last entry is b.
 def systemFromAugmentedMatrix {A : Type} [Field_ A] {m n : Nat}
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
+    (matrix : AugMatrix A m n) :
     LinearSystem A m n :=
   { equations := fun row =>
       { a := fun column =>
@@ -17,9 +17,9 @@ def systemFromAugmentedMatrix {A : Type} [Field_ A] {m n : Nat}
 def applyMatrixElementaryOperation
     {A : Type} [Field_ A] {m n : Nat}
     (operation : ElementaryOperation A m n)
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
-    Ntuple (Ntuple A (n + 1)) m :=
-  AugmentedMatrix
+    (matrix : AugMatrix A m n) :
+    AugMatrix A m n :=
+  augmentedMatrix
     (applyElementaryOperation operation
       (systemFromAugmentedMatrix matrix))
 
@@ -29,35 +29,26 @@ def applyMatrixSequence
     {A : Type} [Field_ A] {m n : Nat}
     (length : Nat)
     (operations : Ntuple (ElementaryOperation A m n) length)
-    (initialMatrix : Ntuple (Ntuple A (n + 1)) m) :
-    Ntuple (Ntuple A (n + 1)) m :=
-  AugmentedMatrix
+    (initialMatrix : AugMatrix A m n) :
+    AugMatrix A m n :=
+  augmentedMatrix
     (applySequence length operations
       (systemFromAugmentedMatrix initialMatrix))
 
--- Two augmented matrices are row equivalent when one is obtained from the other
--- by a finite sequence of elementary row operations.
-def RowEquivalent
-    {A : Type} [Field_ A] {m n : Nat}
-    (firstMatrix secondMatrix : Ntuple (Ntuple A (n + 1)) m) : Prop :=
-  ∃ length : Nat,
-    ∃ operations : Ntuple (ElementaryOperation A m n) length,
-      secondMatrix = applyMatrixSequence length operations firstMatrix
-
-theorem systemFromAugmentedMatrix_AugmentedMatrix
+theorem systemFromAugmentedMatrix_augmentedMatrix
     {A : Type} [Field_ A] {m n : Nat}
     (system : LinearSystem A m n) :
-    systemFromAugmentedMatrix (AugmentedMatrix system) = system := by
+    systemFromAugmentedMatrix (augmentedMatrix system) = system := by
   cases system with
   | mk equations =>
-      simp [systemFromAugmentedMatrix, AugmentedMatrix]
+      simp [systemFromAugmentedMatrix, augmentedMatrix]
 
-theorem AugmentedMatrix_systemFromAugmentedMatrix
+theorem augmentedMatrix_systemFromAugmentedMatrix
     {A : Type} [Field_ A] {m n : Nat}
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
-    AugmentedMatrix (systemFromAugmentedMatrix matrix) = matrix := by
+    (matrix : AugMatrix A m n) :
+    augmentedMatrix (systemFromAugmentedMatrix matrix) = matrix := by
   funext row column
-  unfold AugmentedMatrix systemFromAugmentedMatrix
+  unfold augmentedMatrix systemFromAugmentedMatrix
   split
   · rfl
   · have columnIsLast : column.val = n := by omega
@@ -220,38 +211,38 @@ theorem applyMatrixSequence_append
     {A : Type} [Field_ A] {m n firstLength secondLength : Nat}
     (firstOperations : Ntuple (ElementaryOperation A m n) firstLength)
     (secondOperations : Ntuple (ElementaryOperation A m n) secondLength)
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
+    (matrix : AugMatrix A m n) :
     applyMatrixSequence (firstLength + secondLength)
         (Fin.append firstOperations secondOperations) matrix =
       applyMatrixSequence secondLength secondOperations
         (applyMatrixSequence firstLength firstOperations matrix) := by
   unfold applyMatrixSequence
   rw [applySequence_append]
-  rw [systemFromAugmentedMatrix_AugmentedMatrix]
+  rw [systemFromAugmentedMatrix_augmentedMatrix]
 
 theorem applyMatrix_inverseElementaryOperation
     {A : Type} [Field_ A] {m n : Nat}
     (operation : ElementaryOperation A m n)
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
+    (matrix : AugMatrix A m n) :
     applyMatrixElementaryOperation (inverseElementaryOperation operation)
         (applyMatrixElementaryOperation operation matrix) = matrix := by
   unfold applyMatrixElementaryOperation
-  rw [systemFromAugmentedMatrix_AugmentedMatrix]
+  rw [systemFromAugmentedMatrix_augmentedMatrix]
   rw [apply_inverseElementaryOperation]
-  exact AugmentedMatrix_systemFromAugmentedMatrix matrix
+  exact augmentedMatrix_systemFromAugmentedMatrix matrix
 
 theorem applyMatrixSequence_zero
     {A : Type} [Field_ A] {m n : Nat}
     (operations : Ntuple (ElementaryOperation A m n) 0)
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
+    (matrix : AugMatrix A m n) :
     applyMatrixSequence 0 operations matrix = matrix := by
   unfold applyMatrixSequence applySequence
-  exact AugmentedMatrix_systemFromAugmentedMatrix matrix
+  exact augmentedMatrix_systemFromAugmentedMatrix matrix
 
 theorem applyMatrixSequence_succ
     {A : Type} [Field_ A] {m n k : Nat}
     (operations : Ntuple (ElementaryOperation A m n) (k + 1))
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
+    (matrix : AugMatrix A m n) :
     applyMatrixSequence (k + 1) operations matrix =
       applyMatrixElementaryOperation
         (operations ⟨k, Nat.lt_succ_self k⟩)
@@ -260,81 +251,164 @@ theorem applyMatrixSequence_succ
             Nat.lt_trans index.isLt (Nat.lt_succ_self k)⟩)
           matrix) := by
   unfold applyMatrixSequence applyMatrixElementaryOperation
-  rw [systemFromAugmentedMatrix_AugmentedMatrix]
+  rw [systemFromAugmentedMatrix_augmentedMatrix]
   rw [applySequence]
 
-theorem RowEquivalent_refl
-    {A : Type} [Field_ A] {m n : Nat}
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
-    RowEquivalent matrix matrix := by
-  refine ⟨0, fun index => Fin.elim0 index, ?_⟩
-  exact (applyMatrixSequence_zero _ matrix).symm
 
-theorem RowEquivalent_single
-    {A : Type} [Field_ A] {m n : Nat}
-    (operation : ElementaryOperation A m n)
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
-    RowEquivalent matrix (applyMatrixElementaryOperation operation matrix) := by
-  refine ⟨1, fun _ => operation, ?_⟩
-  rw [applyMatrixSequence_succ]
-  rw [applyMatrixSequence_zero]
+-- ============================================================
+-- 1.8.1  שקילות־שורה
+-- הגדרה 1.8.1 בספר: A שקולת-שורה ל-B אם יש סדרה סופית של
+-- פעולות שורה שמובילה מ-A ל-B.
+--
+-- מנוסח כאן כטיפוס אינדוקטיבי: הסגור הרפלקסיבי-טרנזיטיבי של
+-- "צעד אחד". השקילות לניסוח של הספר, עם סדרה מפורשת, מוכחת
+-- למטה בשני הכיוונים.
+--
+-- המטריצה הראשונה היא *פרמטר* (לפני הנקודתיים) והשנייה
+-- *אינדקס* (אחרי הנקודתיים): induction מכליל אינדקסים בלבד,
+-- ולכן הנחות אחרות שמדברות על הראשונה לא נגררות למוטיב.
+-- ============================================================
 
-theorem RowEquivalent_trans
-    {A : Type} [Field_ A] {m n : Nat}
-    {firstMatrix secondMatrix thirdMatrix :
-      Ntuple (Ntuple A (n + 1)) m}
+inductive RowEquivalent {A : Type} [Field_ A] {m n : Nat}
+    (firstMatrix : AugMatrix A m n) : AugMatrix A m n → Prop
+  | refl : RowEquivalent firstMatrix firstMatrix
+  | step {middleMatrix : AugMatrix A m n}
+      (operation : ElementaryOperation A m n)
+      (h : RowEquivalent firstMatrix middleMatrix) :
+      RowEquivalent firstMatrix
+        (applyMatrixElementaryOperation operation middleMatrix)
+
+/-- צעד בודד קדימה. -/
+theorem RowEquivalent_single {A : Type} [Field_ A] {m n : Nat}
+    (operation : ElementaryOperation A m n) (matrix : AugMatrix A m n) :
+    RowEquivalent matrix (applyMatrixElementaryOperation operation matrix) :=
+  RowEquivalent.step operation RowEquivalent.refl
+
+/-- צעד בודד אחורה, דרך הפעולה ההופכית. -/
+theorem RowEquivalent_inverse_step {A : Type} [Field_ A] {m n : Nat}
+    (operation : ElementaryOperation A m n) (matrix : AugMatrix A m n) :
+    RowEquivalent (applyMatrixElementaryOperation operation matrix) matrix := by
+  have h : RowEquivalent (applyMatrixElementaryOperation operation matrix)
+      (applyMatrixElementaryOperation (inverseElementaryOperation operation)
+        (applyMatrixElementaryOperation operation matrix)) :=
+    RowEquivalent_single (inverseElementaryOperation operation)
+      (applyMatrixElementaryOperation operation matrix)
+  rw [applyMatrix_inverseElementaryOperation] at h
+  exact h
+
+theorem RowEquivalent_trans {A : Type} [Field_ A] {m n : Nat}
+    (firstMatrix secondMatrix thirdMatrix : AugMatrix A m n)
     (firstToSecond : RowEquivalent firstMatrix secondMatrix)
     (secondToThird : RowEquivalent secondMatrix thirdMatrix) :
     RowEquivalent firstMatrix thirdMatrix := by
-  obtain ⟨firstLength, firstOperations, firstEquality⟩ := firstToSecond
-  obtain ⟨secondLength, secondOperations, secondEquality⟩ := secondToThird
-  refine ⟨firstLength + secondLength,
-    Fin.append firstOperations secondOperations, ?_⟩
-  rw [applyMatrixSequence_append]
-  rw [← firstEquality]
-  exact secondEquality
+  induction secondToThird with
+  | refl =>
+      exact firstToSecond
+  | step operation hMiddle ih =>
+      exact RowEquivalent.step operation ih
 
-theorem RowEquivalent_inverse_step
-    {A : Type} [Field_ A] {m n : Nat}
-    (operation : ElementaryOperation A m n)
-    (matrix : Ntuple (Ntuple A (n + 1)) m) :
-    RowEquivalent (applyMatrixElementaryOperation operation matrix) matrix := by
-  have inverseStep := RowEquivalent_single
-    (inverseElementaryOperation operation)
-    (applyMatrixElementaryOperation operation matrix)
-  rw [applyMatrix_inverseElementaryOperation] at inverseStep
-  exact inverseStep
-
-theorem RowEquivalent_symm
-    {A : Type} [Field_ A] {m n : Nat}
-    {firstMatrix secondMatrix : Ntuple (Ntuple A (n + 1)) m}
-    (equivalent : RowEquivalent firstMatrix secondMatrix) :
+theorem RowEquivalent_symm {A : Type} [Field_ A] {m n : Nat}
+    (firstMatrix secondMatrix : AugMatrix A m n)
+    (h : RowEquivalent firstMatrix secondMatrix) :
     RowEquivalent secondMatrix firstMatrix := by
-  obtain ⟨length, operations, equality⟩ := equivalent
-  subst secondMatrix
+  induction h with
+  | refl =>
+      exact RowEquivalent.refl
+  | step operation hMiddle ih =>
+      exact RowEquivalent_trans _ _ _
+        (RowEquivalent_inverse_step operation _) ih
+
+theorem RowEquivalent_equivalence {A : Type} [Field_ A] {m n : Nat} :
+    Equivalence (fun (M N : AugMatrix A m n) => RowEquivalent M N) :=
+  { refl  := fun _M => RowEquivalent.refl
+    symm  := fun {M N} h => RowEquivalent_symm M N h
+    trans := fun {M N P} h₁ h₂ => RowEquivalent_trans M N P h₁ h₂ }
+
+-- ============================================================
+-- 1.8.2  השקילות לניסוח של הספר, עם סדרה סופית מפורשת
+-- ============================================================
+
+/-- הוספת פעולה בסוף סדרה. -/
+def appendOp {A : Type} [Field_ A] {m n length : Nat}
+    (operations : Ntuple (ElementaryOperation A m n) length)
+    (operation : ElementaryOperation A m n) :
+    Ntuple (ElementaryOperation A m n) (length + 1) :=
+  fun index =>
+    if hi : index.val < length then operations ⟨index.val, hi⟩ else operation
+
+theorem appendOp_last {A : Type} [Field_ A] {m n length : Nat}
+    (operations : Ntuple (ElementaryOperation A m n) length)
+    (operation : ElementaryOperation A m n) :
+    appendOp operations operation ⟨length, Nat.lt_succ_self length⟩ = operation := by
+  show (if hi : length < length then operations ⟨length, hi⟩ else operation) = operation
+  rw [dif_neg (Nat.lt_irrefl length)]
+
+theorem appendOp_init {A : Type} [Field_ A] {m n length : Nat}
+    (operations : Ntuple (ElementaryOperation A m n) length)
+    (operation : ElementaryOperation A m n) :
+    (fun index : Fin length =>
+      appendOp operations operation
+        ⟨index.val, Nat.lt_trans index.isLt (Nat.lt_succ_self length)⟩) = operations := by
+  funext index
+  show (if hi : index.val < length then operations ⟨index.val, hi⟩ else operation)
+      = operations index
+  rw [dif_pos index.isLt]
+
+/-- כל סדרה סופית של פעולות מייצרת מטריצה שקולת־שורה. -/
+theorem RowEquivalent_applyMatrixSequence {A : Type} [Field_ A] {m n : Nat} :
+    ∀ (length : Nat) (operations : Ntuple (ElementaryOperation A m n) length)
+      (matrix : AugMatrix A m n),
+      RowEquivalent matrix (applyMatrixSequence length operations matrix) := by
+  intro length
   induction length with
   | zero =>
+      intro operations matrix
       rw [applyMatrixSequence_zero]
-      exact RowEquivalent_refl firstMatrix
-  | succ k inductionHypothesis =>
-      let previousOperations : Ntuple (ElementaryOperation A m n) k :=
-        fun index => operations ⟨index.val,
-          Nat.lt_trans index.isLt (Nat.lt_succ_self k)⟩
-      let lastOperation : ElementaryOperation A m n :=
-        operations ⟨k, Nat.lt_succ_self k⟩
-      let beforeLast :=
-        applyMatrixSequence k previousOperations firstMatrix
-      have lastBack :
-          RowEquivalent
-            (applyMatrixElementaryOperation lastOperation beforeLast)
-            beforeLast :=
-        RowEquivalent_inverse_step lastOperation beforeLast
-      have previousBack : RowEquivalent beforeLast firstMatrix :=
-        inductionHypothesis previousOperations
+      exact RowEquivalent.refl
+  | succ k ih =>
+      intro operations matrix
       rw [applyMatrixSequence_succ]
-      exact RowEquivalent_trans lastBack previousBack
+      exact RowEquivalent.step (operations ⟨k, Nat.lt_succ_self k⟩)
+        (ih (fun index => operations
+          ⟨index.val, Nat.lt_trans index.isLt (Nat.lt_succ_self k)⟩) matrix)
 
-theorem RowEquivalent_equivalence
-    {A : Type} [Field_ A] {m n : Nat} :
-    Equivalence (@RowEquivalent A _ m n) :=
-  ⟨RowEquivalent_refl, RowEquivalent_symm, RowEquivalent_trans⟩
+/-- ולהפך. שני המשפטים יחד מראים שההגדרה האינדוקטיבית שקולה
+    להגדרה 1.8.1 בספר. -/
+theorem applyMatrixSequence_of_RowEquivalent {A : Type} [Field_ A] {m n : Nat}
+    (firstMatrix secondMatrix : AugMatrix A m n)
+    (h : RowEquivalent firstMatrix secondMatrix) :
+    ∃ (length : Nat) (operations : Ntuple (ElementaryOperation A m n) length),
+      secondMatrix = applyMatrixSequence length operations firstMatrix := by
+  induction h with
+  | refl =>
+      apply Exists.intro 0
+      apply Exists.intro (fun index : Fin 0 => Fin.elim0 index)
+      rw [applyMatrixSequence_zero]
+  | step operation hMiddle ih =>
+      obtain ⟨length, operations, hops⟩ := ih
+      apply Exists.intro (length + 1)
+      apply Exists.intro (appendOp operations operation)
+      rw [applyMatrixSequence_succ]
+      rw [appendOp_last]
+      rw [appendOp_init]
+      rw [hops]
+
+-- ============================================================
+-- 1.8.3  המסקנה של הסעיף (הספר, עמ' 70)
+-- "אם שתי מטריצות הן שקולות־שורה, אז המערכות הלינאריות
+--  שהן מייצגות הן שקולות."
+-- ============================================================
+
+theorem RowEquivalent_implies_AreEquivalent {A : Type} [Field_ A] {m n : Nat}
+    (firstMatrix secondMatrix : AugMatrix A m n)
+    (h : RowEquivalent firstMatrix secondMatrix) :
+    AreEquivalent (systemFromAugmentedMatrix firstMatrix)
+                  (systemFromAugmentedMatrix secondMatrix) := by
+  induction h with
+  | refl =>
+      exact AreEquivalent_refl (systemFromAugmentedMatrix firstMatrix)
+  | step operation hMiddle ih =>
+      unfold applyMatrixElementaryOperation
+      rw [systemFromAugmentedMatrix_augmentedMatrix]
+      exact AreEquivalent_trans _ _ _ ih
+        (elementaryOperation_equivalent operation _)
